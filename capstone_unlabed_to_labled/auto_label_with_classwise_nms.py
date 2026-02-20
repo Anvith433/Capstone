@@ -26,6 +26,16 @@ model = YOLO("yolov8n.pt")
 CONF_THRES = 0.25
 
 # ===============================
+# ALLOWED COCO CLASSES
+# ===============================
+ALLOWED_COCO_CLASSES = {
+    0, 39, 41, 56, 57, 58, 59, 60, 61, 62,
+    63, 65, 67, 73, 74, 75
+}
+
+UNKNOWN_CLASS_ID = 80
+
+# ===============================
 # DUPLICATE LOGIC (UNCHANGED)
 # ===============================
 HIGH_IOU = 0.65
@@ -73,8 +83,11 @@ for img in images:
         x1, y1, x2, y2 = map(float, b.xyxy[0])
         x, y, w, h = map(float, b.xywhn[0])
 
+        raw_cls = int(b.cls[0])
+        cls_id = raw_cls if raw_cls in ALLOWED_COCO_CLASSES else UNKNOWN_CLASS_ID
+
         detections.append({
-            "cls": int(b.cls[0]),
+            "cls": cls_id,
             "conf": float(b.conf[0]),
             "xyxy": (x1, y1, x2, y2),
             "xywh": (x, y, w, h),
@@ -128,7 +141,7 @@ save(val_samples, IMG_VAL_DIR, LBL_VAL_DIR)
 # ===============================
 # SUMMARY
 # ===============================
-print("✅ Auto-labeling + 80/20 split completed")
+print("✅ Auto-labeling + unknown-class handling + 80/20 split completed")
 print(f"Total images scanned : {len(images)}")
 print(f"Labeled images       : {len(labeled_samples)}")
 print(f"Train images         : {len(train_samples)}")
